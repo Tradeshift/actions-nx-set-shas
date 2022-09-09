@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    name: Test workflow integration
+    name: Test Integration
     uses: ./.github/workflows/integration-test-workflow.yml
     with:
       working-directory: integration-test
