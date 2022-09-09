@@ -1,9 +1,6 @@
 name: "Test Integration"
 
 on:
-  push:
-    paths-ignore:
-      - "**.md"
   pull_request:
     paths-ignore:
       - "**.md"
@@ -14,7 +11,7 @@ concurrency:
 
 jobs:
   test:
-    name: Test Integration
+    name: Test workflow integration
     uses: ./.github/workflows/integration-test-workflow.yml
     with:
       working-directory: integration-test
