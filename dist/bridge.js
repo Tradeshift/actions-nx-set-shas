@@ -109,6 +109,8 @@ const thisErrorCaptureStackTrace = Error.captureStackTrace;
 
 const thisSymbolToString = Symbol.prototype.toString;
 const thisSymbolToStringTag = Symbol.toStringTag;
+const thisSymbolIterator = Symbol.iterator;
+const thisSymbolNodeJSUtilInspectCustom = Symbol.for('nodejs.util.inspect.custom');
 
 /**
  * VMError.
@@ -355,7 +357,11 @@ function createBridge(otherInit, registerProxy) {
 		constructor(object) {
 			// Note: object@other(unsafe) throws@this(unsafe)
 			super();
-			this.object = object;
+			this.objectWrapper = () => object;
+		}
+
+		getObject() {
+			return this.objectWrapper();
 		}
 
 		getFactory() {
@@ -415,7 +421,7 @@ function createBridge(otherInit, registerProxy) {
 
 		get(target, key, receiver) {
 			// Note: target@this(unsafe) key@prim receiver@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			switch (key) {
 				case 'constructor': {
 					const desc = otherSafeGetOwnPropertyDescriptor(object, key);
@@ -454,7 +460,7 @@ function createBridge(otherInit, registerProxy) {
 
 		set(target, key, value, receiver) {
 			// Note: target@this(unsafe) key@prim value@this(unsafe) receiver@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			if (key === '__proto__' && !thisOtherHasOwnProperty(object, key)) {
 				return this.setPrototypeOf(target, value);
 			}
@@ -478,7 +484,7 @@ function createBridge(otherInit, registerProxy) {
 
 		apply(target, context, args) {
 			// Note: target@this(unsafe) context@this(unsafe) args@this(safe-array) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			let ret; // @other(unsafe)
 			try {
 				context = otherFromThis(context);
@@ -492,7 +498,7 @@ function createBridge(otherInit, registerProxy) {
 
 		construct(target, args, newTarget) {
 			// Note: target@this(unsafe) args@this(safe-array) newTarget@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			let ret; // @other(unsafe)
 			try {
 				args = otherFromThisArguments(args);
@@ -505,14 +511,14 @@ function createBridge(otherInit, registerProxy) {
 
 		getOwnPropertyDescriptorDesc(target, prop, desc) {
 			// Note: target@this(unsafe) prop@prim desc@other{safe} throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			if (desc && typeof object === 'function' && (prop === 'arguments' || prop === 'caller' || prop === 'callee')) desc.value = null;
 			return desc;
 		}
 
 		getOwnPropertyDescriptor(target, prop) {
 			// Note: target@this(unsafe) prop@prim throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			let desc; // @other(safe)
 			try {
 				desc = otherSafeGetOwnPropertyDescriptor(object, prop);
@@ -558,7 +564,7 @@ function createBridge(otherInit, registerProxy) {
 
 		defineProperty(target, prop, desc) {
 			// Note: target@this(unsafe) prop@prim desc@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			if (!thisReflectSetPrototypeOf(desc, null)) throw thisUnexpected();
 
 			desc = this.definePropertyDesc(target, prop, desc);
@@ -611,7 +617,7 @@ function createBridge(otherInit, registerProxy) {
 
 		deleteProperty(target, prop) {
 			// Note: target@this(unsafe) prop@prim throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			try {
 				return otherReflectDeleteProperty(object, prop) === true;
 			} catch (e) { // @other(unsafe)
@@ -621,7 +627,7 @@ function createBridge(otherInit, registerProxy) {
 
 		has(target, key) {
 			// Note: target@this(unsafe) key@prim throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			try {
 				return otherReflectHas(object, key) === true;
 			} catch (e) { // @other(unsafe)
@@ -631,7 +637,7 @@ function createBridge(otherInit, registerProxy) {
 
 		isExtensible(target) {
 			// Note: target@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			try {
 				if (otherReflectIsExtensible(object)) return true;
 			} catch (e) { // @other(unsafe)
@@ -645,7 +651,7 @@ function createBridge(otherInit, registerProxy) {
 
 		ownKeys(target) {
 			// Note: target@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			let res; // @other(unsafe)
 			try {
 				res = otherReflectOwnKeys(object);
@@ -657,7 +663,7 @@ function createBridge(otherInit, registerProxy) {
 
 		preventExtensions(target) {
 			// Note: target@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			try {
 				if (!otherReflectPreventExtensions(object)) return false;
 			} catch (e) { // @other(unsafe)
@@ -671,7 +677,7 @@ function createBridge(otherInit, registerProxy) {
 
 		enumerate(target) {
 			// Note: target@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			let res; // @other(unsafe)
 			try {
 				res = otherReflectEnumerate(object);
@@ -682,6 +688,10 @@ function createBridge(otherInit, registerProxy) {
 		}
 
 	}
+
+	BaseHandler.prototype[thisSymbolNodeJSUtilInspectCustom] = undefined;
+	BaseHandler.prototype[thisSymbolToStringTag] = 'VM2 Wrapper';
+	BaseHandler.prototype[thisSymbolIterator] = undefined;
 
 	function defaultFactory(object) {
 		// Note: other@other(unsafe) returns@this(unsafe) throws@this(unsafe)
@@ -780,7 +790,7 @@ function createBridge(otherInit, registerProxy) {
 
 		get(target, key, receiver) {
 			// Note: target@this(unsafe) key@prim receiver@this(unsafe) throws@this(unsafe)
-			const object = this.object; // @other(unsafe)
+			const object = this.getObject(); // @other(unsafe)
 			const mock = this.mock;
 			if (thisReflectApply(thisObjectHasOwnProperty, mock, key) && !thisOtherHasOwnProperty(object, key)) {
 				return mock[key];

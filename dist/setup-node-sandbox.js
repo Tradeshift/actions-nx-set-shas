@@ -338,6 +338,8 @@ function process() {
 	return this;
 }
 
+const baseUptime = localProcess.uptime();
+
 // FIXME wrong class structure
 global.process = {
 	__proto__: process.prototype,
@@ -361,6 +363,9 @@ global.process = {
 	},
 	hrtime: function hrtime(time) {
 		return localProcess.hrtime(time);
+	},
+	uptime: function uptime() {
+		return localProcess.uptime() - baseUptime;
 	},
 	cwd: function cwd() {
 		return localProcess.cwd();
