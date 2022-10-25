@@ -59,7 +59,10 @@ const {
 	AsyncGeneratorFunction
 } = data;
 
-const localWeakMapGet = LocalWeakMap.prototype.get;
+const {
+	get: localWeakMapGet,
+	set: localWeakMapSet
+} = LocalWeakMap.prototype;
 
 function localUnexpected() {
 	return new VMError('Should not happen');
@@ -72,7 +75,8 @@ Object.defineProperties(global, {
 	global: {value: global, writable: true, configurable: true, enumerable: true},
 	globalThis: {value: global, writable: true, configurable: true},
 	GLOBAL: {value: global, writable: true, configurable: true},
-	root: {value: global, writable: true, configurable: true}
+	root: {value: global, writable: true, configurable: true},
+	Error: {value: LocalError}
 });
 
 if (!localReflectDefineProperty(global, 'VMError', {
@@ -290,8 +294,8 @@ if (typeof OriginalCallSite === 'function') {
 				}
 				return value(error, sst);
 			};
-			wrappedPrepareStackTrace.set(value, newWrapped);
-			wrappedPrepareStackTrace.set(newWrapped, newWrapped);
+			localReflectApply(localWeakMapSet, wrappedPrepareStackTrace, [value, newWrapped]);
+			localReflectApply(localWeakMapSet, wrappedPrepareStackTrace, [newWrapped, newWrapped]);
 			currentPrepareStackTrace = newWrapped;
 		}
 	})) throw localUnexpected();
