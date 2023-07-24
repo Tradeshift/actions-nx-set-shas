@@ -65,7 +65,14 @@ jobs:
         id: semantic-release
         with:
           check_name: Semantic release
-          branch: "main"
+          branches: |
+            [
+              'master',
+              'main',
+              'next',
+              {name: 'beta', prerelease: true},
+              {name: 'alpha', prerelease: true}
+            ]
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
