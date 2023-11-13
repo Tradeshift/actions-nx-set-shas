@@ -47,7 +47,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           committer: ${{ steps.configure.outputs.user }}
           author: ${{ steps.configure.outputs.user }}
-
+          
       - name: Fail build on diff
         if: ${{ steps.diff.outcome != 'success' }}
         run: exit 1
