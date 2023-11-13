@@ -33,10 +33,10 @@ jobs:
           node-version: 18
 
       - name: Install
-        run: yarn --frozen-lockfile
+        run: npm ci
 
       - name: Compile
-        run: yarn build
+        run: npm run build
 
       - name: Test default PR Workflow
         if: github.event_name == 'pull_request'
