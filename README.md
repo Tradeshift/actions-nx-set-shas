@@ -12,6 +12,8 @@ width="100%" alt="Nx - Smart, Extensible Build Framework"></p>
 
 **NOTE:** This documentation is for version `2.x.x+` which now uses the GitHub API to track successful workflows. You can find documentation for version `1.x.x` which used GIT tags [here](https://github.com/nrwl/nx-set-shas/blob/v1/README.md).
 
+**NOTE:** The `v4` does no longer support deprecated Node versions. Supported version is `Node v18+`.
+
 ## Example Usage
 
 **.github/workflows/ci.yml**
@@ -25,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     name: My Job
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
@@ -37,7 +39,7 @@ jobs:
       # OPTION 1) Environment variables
       # ===========================================================================
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
-        uses: nrwl/nx-set-shas@v3
+        uses: nrwl/nx-set-shas@v4
     
       - run: |
           echo "BASE: ${{ env.NX_BASE }}"
@@ -48,7 +50,7 @@ jobs:
       # ===========================================================================
       - name: Derive appropriate SHAs for base and head for `nx affected` commands
         id: setSHAs
-        uses: nrwl/nx-set-shas@v3
+        uses: nrwl/nx-set-shas@v4
     
       - run: |
           echo "BASE: ${{ steps.setSHAs.outputs.base }}"
@@ -62,7 +64,7 @@ jobs:
 
 <!-- start configuration-options -->
 ```yaml
-- uses: nrwl/nx-set-shas@v3
+- uses: nrwl/nx-set-shas@v4
   with:
     # The "main" branch of your repository (the base branch which you target with PRs).
     # Common names for this branch include main and master.
@@ -80,7 +82,7 @@ jobs:
     # Default: false
     error-on-no-successful-workflow: ''
 
-    # The type of event to check for the last successful commit corresponding to that workflow-id, e.g. push, pull-request, release etc.
+    # The type of event to check for the last successful commit corresponding to that workflow-id, e.g. push, pull_request, release etc.
     #
     # Default: push
     last-successful-event: ''
@@ -101,6 +103,7 @@ jobs:
 
 This Action uses Github API to find the last successful workflow run. If your `GITHUB_TOKEN` has restrictions set please ensure you override them for the workflow to enable read access to `actions` and `contents`:
 
+<!-- start permissions-in-v2 -->
 ```yaml
 jobs:
   myjob:
@@ -110,12 +113,47 @@ jobs:
       contents: 'read'
       actions: 'read'
 ```
+<!-- end permissions-in-v2 -->
+
+## Self-hosted runners
+
+This Action supports usage of your own self-hosted runners, but since it uses GitHub APIs you will need to grant it explicit access rights:
+
+<!-- self-hosted runners -->
+```yaml
+# ... more CI config ...
+
+jobs:
+  myjob:
+    runs-on: self-hosted
+      container: my-org/my-amazing-image:v1.2.3-fresh
+    name: My Job
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+
+      # Mark your git directory as safe
+      - name: Set Directory as Safe
+        run: |
+          git config --system --add safe.directory "$GITHUB_WORKSPACE"
+        shell: bash
+
+      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+        uses: nrwl/nx-set-shas@v4
+
+      - run: |
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
+
+      # ... more CI config ...
+```
+<!-- end self-hosted runners -->
 
 ## Background
 
-When we run the `affected` command on [Nx](https://nx.dev/), we can specify 2 git history positions - base and head, and it calculates [which projects in your repository changed
-between those 2 commits](https://nx.dev/latest/angular/tutorial/11-test-affected-projects#step-11-test-affected-projects
-). We can then run a set of tasks (like building or linting) only on those **affected** projects.
+When we run the `affected` command on [Nx](https://nx.dev/), we can specify 2 git history positions - base and head, and it calculates which projects in your repository changed between those 2 commits. We can then run a set of tasks (like building or linting) only on those **affected** projects.
 
 This makes it easy to set up a CI system that scales well with the continuous growth of your repository, as you add more and more projects.
 
