@@ -28,6 +28,6 @@
     "chalk": "^5.4.1",
     "husky": "^9.1.7",
     "is-ci": "^4.1.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }
