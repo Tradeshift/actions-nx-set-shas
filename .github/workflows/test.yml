@@ -14,14 +14,14 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         name: Checkout [Pull Request]
         if: ${{ github.event_name == 'pull_request' }}
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         name: Checkout [Push]
         if: ${{ github.event_name != 'pull_request' }}
         with:
